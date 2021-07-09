@@ -27,10 +27,11 @@ include("main.jl"); TPOPF("case_name",obj_op)
    - *obj_op*: choose objective function 
      - 1: no objective
      - 2: minimize VUF
-	 - 3: minimize PVUR
-	 - 4: minimize LVUR
-	 - 5: minimize network losses with unbalance constraints
-
+	 - 3: minimize substation power injection
+	 - 4: minimize PVUR
+	 - 5: minimize LVUR
+	 - 6: minimize network losses with unbalance constraints
+	 - 7: minimize solar PV reactive power injections
 
    
 
