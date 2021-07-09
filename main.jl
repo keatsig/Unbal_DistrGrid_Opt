@@ -17,7 +17,7 @@ function TPOPF(case_name1,obj_op1)
 
     ## Load test case
     global case_name = case_name1; global obj_op = obj_op1;
-    global PV_en = 1;   # 0-exclude, 1-include ZIP loads/PV inverters
+    global PV_en = 0;   # 0-exclude, 1-include ZIP loads/PV inverters
     if PV_en == 1
         house_sch = CSV.read(string("data/",case_name,"/House_",case_name,"_profile.csv"),header=false,type=Float64,DataFrame)
         global house_sch = convert(Matrix,house_sch);
@@ -40,7 +40,7 @@ function TPOPF(case_name1,obj_op1)
     global tap_en = 0; # Enable taps as variables only for ivr formulation
 
     ## Parse system data
-    parse_gld(crit_node); global M = 1e3
+    parse_gld(); global M = 1e3
 
     ## Create Y_bus and connection matrices
     Ybus(); conn_bgl();

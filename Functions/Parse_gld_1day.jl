@@ -95,11 +95,11 @@ end
 #----------------------------------------------------------------------------------------#
 
 ### FUNCTION TO PARSE ALL DATA FROM GRIDLABD
-function parse_gld(crit_node)
+function parse_gld()
 
-    data_file = open(string("data/",case_name,"/data.xml"))
+    data_file = open(string("../data/",case_name,"/data.xml"))
     data = readlines(data_file)
-    z_file = open(string("data/",case_name,"/z_dump.xml"))
+    z_file = open(string("../data/",case_name,"/z_dump.xml"))
     z_dump = readlines(z_file)
 
     ## PARSE BUS DATA
@@ -272,7 +272,7 @@ function parse_gld(crit_node)
 
     ## Calculate three-phase nodes
     global idx_bus_3ph = findall(idx -> idx == 3,bus_count)
-    global nb_3ph = length(idx_bus_3ph);
+    global nb_3ph = length(idx_bus_3ph); global crit_node
     if crit_node == "All" || crit_node == "all" || crit_node == "ALL"
         crit_node = bus_ID[idx_bus_3ph]
     end
@@ -327,7 +327,10 @@ function parse_gld(crit_node)
     VR_cfig_bc = str_num(get_data(data,nvr_config,idx_VR_cfig_f,idx_VR_cfig_t,"<band_center>",3))
     VR_cfig_bw = str_num(get_data(data,nvr_config,idx_VR_cfig_f,idx_VR_cfig_t,"<band_width>",3))
     VR_cfig_pt = str_num(get_data(data,nvr_config,idx_VR_cfig_f,idx_VR_cfig_t,"<power_transducer_ratio>",3))
-    global VR_config = [VR_cfig_name VR_cfig_pt VR_cfig_bc-VR_cfig_bw/2 VR_cfig_bc+VR_cfig_bw/2]
+    VR_cfig_cp = str_num(get_data(data,nvr_config,idx_VR_cfig_f,idx_VR_cfig_t,"<current_transducer_ratio>",3))
+    VR_cfig_ra = str_num(get_data(data,nvr_config,idx_VR_cfig_f,idx_VR_cfig_t,"<compensator_r_setting_A>",3))
+    VR_cfig_xa = str_num(get_data(data,nvr_config,idx_VR_cfig_f,idx_VR_cfig_t,"<compensator_x_setting_A>",3))
+    global VR_config = [VR_cfig_name VR_cfig_pt VR_cfig_bc-VR_cfig_bw/2 VR_cfig_bc+VR_cfig_bw/2 VR_cfig_cp VR_cfig_ra VR_cfig_xa]
 
     ## Calculate base values
     tf_rating = get_data(z_dump,nbr_tf,idx_TF_f,idx_TF_t,"<power_rating>",3)
@@ -346,7 +349,7 @@ function parse_gld(crit_node)
         global baseMVA = 1
     end
     global baseZ= bus_Vnom.^2*1e-6/baseMVA;
-    global baseI = baseMVA*1e6/bus_Vnom;
+    global baseI = baseMVA*1e6./bus_Vnom;
 
     ## Create matrix for switch status
     idx_SW_f1 = findall(idx -> idx == "\t\t\t<switch>", data); idx_SW_t1 = findall(idx -> idx == "\t\t\t</switch>", data)
@@ -483,8 +486,6 @@ function parse_gld(crit_node)
         if nbr_vr != 0
             idx_VR_f1 = findall(idx -> idx == "\t\t\t<regulator>", data); idx_VR_t1 = findall(idx -> idx == "\t\t\t</regulator>", data)
             vr_bw = get_data(data,nbr_vr,idx_VR_f1,idx_VR_t1,"<configuration>",4)
-            # tf_branch[nbr_ohl+nbr_ugl+nbr_tf+1:nbr_ohl+nbr_ugl+nbr_tf+nbr_vr,4] .= 0.0001
-            # tf_branch[nbr_ohl+nbr_ugl+nbr_tf+1:nbr_ohl+nbr_ugl+nbr_tf+nbr_vr,5] .= 0.00001
             tf_branch[nbr_ohl+nbr_ugl+nbr_tf+1:nbr_ohl+nbr_ugl+nbr_tf+nbr_vr,4] = 0.0001/baseZ[Int.(tf_branch[nbr_ohl+nbr_ugl+nbr_tf+1:nbr_ohl+nbr_ugl+nbr_tf+nbr_vr,1])]
             vr_tap = zeros(nbr_vr,3)
             for i=1:3

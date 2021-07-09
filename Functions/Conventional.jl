@@ -704,8 +704,43 @@ function TPOPF_ivr(crit_node,Vm0,θ0,QgY0)
             end
             Isum_d = @expression(m, [k=1:length(ii)], sum(Ibus_d[kk] for kk in neighbours_1ph if bus_ϕ[kk] == bus_ϕ[ii[k]]) )
             Isum_q = @expression(m, [k=1:length(ii)], sum(Ibus_q[kk] for kk in neighbours_1ph if bus_ϕ[kk] == bus_ϕ[ii[k]]) )
-            @constraint(m, Ibus_d[ii] .== Id_inj[ii] + Isum_d ) 
-            @constraint(m, Ibus_q[ii] .== Iq_inj[ii] + Isum_q )    
+            if i == Int(tf_branch[vr_idx[1],2])
+                if tap_en == 0
+                    if bus_ph[i] == "AN"
+                        global vr_tap = 1 + 0.00625*tf_branch[vr_idx[1],6]
+                    elseif bus_ph[i] == "BN"
+                        global vr_tap = 1 + 0.00625*tf_branch[vr_idx[1],7]
+                    elseif bus_ph[i] == "CN"
+                        global vr_tap = 1 + 0.00625*tf_branch[vr_idx[1],8]
+                    elseif bus_ph[i] == "ABN" || bus_ph[i] == "BAN"
+                        global vr_tap = 1 .+ 0.00625*tf_branch[vr_idx[1],6:7]
+                    elseif bus_ph[i] == "BCN" || bus_ph[i] == "CBN"
+                        global vr_tap = 1 .+ 0.00625*tf_branch[vr_idx[1],7:8]
+                    elseif bus_ph[i] == "ACN" || bus_ph[i] == "CAN"
+                        global vr_tap = 1 .+ 0.00625*tf_branch[vr_idx[1],6:2:8]
+                    else
+                        global vr_tap = 1 .+ 0.00625*tf_branch[vr_idx[1],6:8]
+                    end
+                    @constraint(m, Ibus_d[ii] .== vr_tap.*(Id_inj[ii] + Isum_d) ) 
+                    @constraint(m, Ibus_q[ii] .== vr_tap.*(Iq_inj[ii] + Isum_q) ) 
+                else
+                    if bus_ph[i] == "AN" || bus_ph[i] == "BN" || bus_ph[i] == "CN"
+                        global vr_tap = @variable(m, start = 1 );
+                    elseif bus_ph[i] == "ABN" || bus_ph[i] == "BAN" || bus_ph[i] == "BCN" || bus_ph[i] == "CBN" || bus_ph[i] == "ACN" || bus_ph[i] == "CAN"
+                        global vr_tap = @variable(m, [i=1:2], start = 1 );
+                    else
+                        global vr_tap = @variable(m, [i=1:3], start = 1 );
+                    end
+                    @constraint(m, 0.9 .<= vr_tap .<= 1.1 )
+                    for (idx,iii) in enumerate(ii)
+                        @NLconstraint(m, Ibus_d[iii] == vr_tap[idx]*(Id_inj[iii] + Isum_d[idx]) ) 
+                        @NLconstraint(m, Ibus_q[iii] == vr_tap[idx]*(Iq_inj[iii] + Isum_q[idx]) ) 
+                    end
+                end  
+            else
+                @constraint(m, Ibus_d[ii] .== Id_inj[ii] + Isum_d ) 
+                @constraint(m, Ibus_q[ii] .== Iq_inj[ii] + Isum_q ) 
+            end   
         end
     end
 
@@ -727,36 +762,21 @@ function TPOPF_ivr(crit_node,Vm0,θ0,QgY0)
         jj = Int.(jjjj); kk = Int.(kkkk); 
         Zbr = -pinv(Y[jj,kk]); Rbr = real(Zbr); Xbr = imag(Zbr);
         if tf_branch[i,3] == 8
-            if tap_en == 0
-                if bus_ph[k] == "AN"
-                    global vr_tap = 1 + 0.00625*tf_branch[vr_idx[count2],6]
-                elseif bus_ph[k] == "BN"
-                    global vr_tap = 1 + 0.00625*tf_branch[vr_idx[count2],7]
-                elseif bus_ph[k] == "CN"
-                    global vr_tap = 1 + 0.00625*tf_branch[vr_idx[count2],8]
-                elseif bus_ph[k] == "ABN" || bus_ph[k] == "BAN"
-                    global vr_tap = 1 .+ 0.00625*tf_branch[vr_idx[count2],6:7]
-                elseif bus_ph[k] == "BCN" || bus_ph[k] == "CBN"
-                    global vr_tap = 1 .+ 0.00625*tf_branch[vr_idx[count2],7:8]
-                elseif bus_ph[k] == "ACN" || bus_ph[k] == "CAN"
-                    global vr_tap = 1 .+ 0.00625*tf_branch[vr_idx[count2],6:2:8]
-                else
-                    global vr_tap = 1 .+ 0.00625*tf_branch[vr_idx[count2],6:8]
-                end
-            else
-                if bus_ph[k] == "AN" || bus_ph[k] == "BN" || bus_ph[k] == "CN"
-                    global vr_tap = @variable(m, start = 1 );
-                elseif bus_ph[k] == "ABN" || bus_ph[k] == "BAN" || bus_ph[k] == "BCN" || bus_ph[k] == "CBN" || bus_ph[k] == "ACN" || bus_ph[k] == "CAN"
-                    global vr_tap = @variable(m, [i=1:2], start = 1 );
-                else
-                    global vr_tap = @variable(m, [i=1:3], start = 1 );
-                end
-                @constraint(m, 0.9 .<= vr_tap .<= 1.1 )
-            end
+            v_min= VR_config[1,3]*VR_config[1,2]/bus_Vnom[k]; 
+            v_max= VR_config[1,4]*VR_config[1,2]/bus_Vnom[k];
+             # @constraint(m, v_min.<= Vm[kk] .<= v_max)
+            v_ref = 0.5*(VR_config[1,3]+VR_config[1,4]);            
+            CT_s = 0.2; CT_p = VR_config[1,5]*CT_s;
+            R_comp = VR_config[1,6]/CT_s; X_comp = VR_config[1,7]/CT_s;
+            # Icomp_d = Ibus_d[kkk]*baseI[k]/VR_config[1,6]; Icomp_q = Ibus_q[kkk]*baseI[k]/VR_config[1,6];
+            # Vcomp_d = Vm[kkk]*cos(θ[kkk])*bus_Vnom[k]/VR_config[1,2]; Vcomp_q = Vm[kkk]*sin(θ[kkk])*bus_Vnom[k]/VR_config[1,2];
             for (idx_r,jjj) in enumerate(jj)
                 kkk = kk[idx_r]; 
-                @NLconstraint(m, Vm[kkk]*cos(θ[kkk]) == vr_tap[idx_r]*(Vm[jjj]*cos(θ[jjj]) - sum(Rbr[idx_r,idx_c]*Ibus_d[val] for (idx_c,val) in enumerate(kk)) + sum(Xbr[idx_r,idx_c]*Ibus_q[val] for (idx_c,val) in enumerate(kk))) )
-                @NLconstraint(m, Vm[kkk]*sin(θ[kkk]) == vr_tap[idx_r]*(Vm[jjj]*sin(θ[jjj]) - sum(Rbr[idx_r,idx_c]*Ibus_q[val] for (idx_c,val) in enumerate(kk)) - sum(Xbr[idx_r,idx_c]*Ibus_d[val] for (idx_c,val) in enumerate(kk))) )
+                # Vreg_d = Vm[kkk]*cos(θ[kkk])*bus_Vnom[k]/VR_config[1,2] - (R_comp*(Ibus_d[kkk]*baseI[k]/VR_config[1,6]) - X_comp*(Ibus_q[kkk]*baseI[k]/VR_config[1,6]) );
+                # Vreg_q = Vm[kkk]*sin(θ[kkk])*bus_Vnom[k]/VR_config[1,2] - (R_comp*(Ibus_q[kkk]*baseI[k]/VR_config[1,6]) + X_comp*(Ibus_d[kkk]*baseI[k]/VR_config[1,6]) );
+                # @NLconstraint(m, vr_tap[idx_r] == (v_ref-sqrt((Vm[kkk]*cos(θ[kkk])*bus_Vnom[k]/VR_config[1,2] - (R_comp*(Ibus_d[kkk]*baseI[k]/VR_config[1,6]) - X_comp*(Ibus_q[kkk]*baseI[k]/VR_config[1,6]) ))^2 + (Vm[kkk]*sin(θ[kkk])*bus_Vnom[k]/VR_config[1,2] - (R_comp*(Ibus_q[kkk]*baseI[k]/VR_config[1,6]) + X_comp*(Ibus_d[kkk]*baseI[k]/VR_config[1,6]) ))^2))/0.75*0.00625+1 );
+                @NLconstraint(m, Vm[kkk]*cos(θ[kkk]) == vr_tap[idx_r]*Vm[jjj]*cos(θ[jjj]) - sum(Rbr[idx_r,idx_c]*Ibus_d[val] for (idx_c,val) in enumerate(kk)) + sum(Xbr[idx_r,idx_c]*Ibus_q[val] for (idx_c,val) in enumerate(kk)) )
+                @NLconstraint(m, Vm[kkk]*sin(θ[kkk]) == vr_tap[idx_r]*Vm[jjj]*sin(θ[jjj]) - sum(Rbr[idx_r,idx_c]*Ibus_q[val] for (idx_c,val) in enumerate(kk)) - sum(Xbr[idx_r,idx_c]*Ibus_d[val] for (idx_c,val) in enumerate(kk)) )
             end
             count2 = count2 + 1;
         else
