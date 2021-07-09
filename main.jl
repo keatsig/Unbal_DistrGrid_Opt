@@ -19,9 +19,9 @@ function TPOPF(case_name1,obj_op1)
     global case_name = case_name1; global obj_op = obj_op1;
     global PV_en = 1;   # 0-exclude, 1-include ZIP loads/PV inverters
     if PV_en == 1
-        house_sch = CSV.read(string("House_",case_name,"_profile.csv"),header=false,type=Float64,DataFrame)
+        house_sch = CSV.read(string("data/",case_name,"/House_",case_name,"_profile.csv"),header=false,type=Float64,DataFrame)
         global house_sch = convert(Matrix,house_sch);
-        PV_sch = CSV.read(string("PV_",case_name,"_profile.csv"),header=false,type=Float64,DataFrame)
+        PV_sch = CSV.read(string("data/",case_name,"/PV_",case_name,"_profile.csv"),header=false,type=Float64,DataFrame)
         global PV_sch = convert(Matrix,PV_sch);
     end
     # global VUF_init = readdlm(string("VUF_",case_name,"_init.csv"), ',')/100
