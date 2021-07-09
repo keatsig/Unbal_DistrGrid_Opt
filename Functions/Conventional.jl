@@ -602,18 +602,7 @@ function TPOPF_ivr(crit_node,Vm0,θ0,QgY0)
     ## Define bounds on voltage magnitude and set slack bus angle to 0
     @constraint(m, Vm[idx_ref] .== 1 )
     @constraint(m, θ[idx_ref] .== [0;-2*pi/3;2*pi/3] )
-    num_count= 1
-    for i=1:nb
-        if  bus[i,2] == 3
-            num_count= num_count+ 3
-        end
-        for j = 3:2:7
-            if bus[i,j] != 0  && bus[i,2] != 3
-                @constraint(m, bus[i,j] <= Vm[num_count]<= bus[i,j+1] )
-                num_count= num_count+ 1
-            end
-        end
-    end
+    @constraint(m, 0.9 .<= Vm[idx_noref] .<= 1.1 )
     for i=1:nb_nph
         k = Int(Tl[i])
         @NLconstraint(m, Vm[i]^2 + Vm[k]^2 - 2*Vm[i]*Vm[k]*cos(θ[i]-θ[k]) == Vll[i]^2 )
@@ -772,9 +761,9 @@ function TPOPF_ivr(crit_node,Vm0,θ0,QgY0)
             # Vcomp_d = Vm[kkk]*cos(θ[kkk])*bus_Vnom[k]/VR_config[1,2]; Vcomp_q = Vm[kkk]*sin(θ[kkk])*bus_Vnom[k]/VR_config[1,2];
             for (idx_r,jjj) in enumerate(jj)
                 kkk = kk[idx_r]; 
-                # Vreg_d = Vm[kkk]*cos(θ[kkk])*bus_Vnom[k]/VR_config[1,2] - (R_comp*(Ibus_d[kkk]*baseI[k]/VR_config[1,6]) - X_comp*(Ibus_q[kkk]*baseI[k]/VR_config[1,6]) );
-                # Vreg_q = Vm[kkk]*sin(θ[kkk])*bus_Vnom[k]/VR_config[1,2] - (R_comp*(Ibus_q[kkk]*baseI[k]/VR_config[1,6]) + X_comp*(Ibus_d[kkk]*baseI[k]/VR_config[1,6]) );
-                # @NLconstraint(m, vr_tap[idx_r] == (v_ref-sqrt((Vm[kkk]*cos(θ[kkk])*bus_Vnom[k]/VR_config[1,2] - (R_comp*(Ibus_d[kkk]*baseI[k]/VR_config[1,6]) - X_comp*(Ibus_q[kkk]*baseI[k]/VR_config[1,6]) ))^2 + (Vm[kkk]*sin(θ[kkk])*bus_Vnom[k]/VR_config[1,2] - (R_comp*(Ibus_q[kkk]*baseI[k]/VR_config[1,6]) + X_comp*(Ibus_d[kkk]*baseI[k]/VR_config[1,6]) ))^2))/0.75*0.00625+1 );
+                # Vreg_d = Vm[kkk]*cos(θ[kkk])*bus_Vnom[k]/VR_config[1,2] - (R_comp*(Ibus_d[kkk]*baseI[k]/VR_config[1,5]) - X_comp*(Ibus_q[kkk]*baseI[k]/VR_config[1,5]) );
+                # Vreg_q = Vm[kkk]*sin(θ[kkk])*bus_Vnom[k]/VR_config[1,2] - (R_comp*(Ibus_q[kkk]*baseI[k]/VR_config[1,5]) + X_comp*(Ibus_d[kkk]*baseI[k]/VR_config[1,5]) );
+                @NLconstraint(m, vr_tap[idx_r] == (v_ref-sqrt((Vm[kkk]*cos(θ[kkk])*bus_Vnom[k]/VR_config[1,2] - (R_comp*(Ibus_d[kkk]*baseI[k]/VR_config[1,5]) - X_comp*(Ibus_q[kkk]*baseI[k]/VR_config[1,5]) ))^2 + (Vm[kkk]*sin(θ[kkk])*bus_Vnom[k]/VR_config[1,2] - (R_comp*(Ibus_q[kkk]*baseI[k]/VR_config[1,5]) + X_comp*(Ibus_d[kkk]*baseI[k]/VR_config[1,5]) ))^2))/0.75*0.00625+1 );
                 @NLconstraint(m, Vm[kkk]*cos(θ[kkk]) == vr_tap[idx_r]*Vm[jjj]*cos(θ[jjj]) - sum(Rbr[idx_r,idx_c]*Ibus_d[val] for (idx_c,val) in enumerate(kk)) + sum(Xbr[idx_r,idx_c]*Ibus_q[val] for (idx_c,val) in enumerate(kk)) )
                 @NLconstraint(m, Vm[kkk]*sin(θ[kkk]) == vr_tap[idx_r]*Vm[jjj]*sin(θ[jjj]) - sum(Rbr[idx_r,idx_c]*Ibus_q[val] for (idx_c,val) in enumerate(kk)) - sum(Xbr[idx_r,idx_c]*Ibus_d[val] for (idx_c,val) in enumerate(kk)) )
             end
@@ -787,7 +776,6 @@ function TPOPF_ivr(crit_node,Vm0,θ0,QgY0)
             end
          end
     end
-    
 
     ## Define cost
     cost_polar(Vll);
@@ -796,7 +784,7 @@ function TPOPF_ivr(crit_node,Vm0,θ0,QgY0)
     @time status = optimize!(m); println(termination_status(m));
     sts = string(termination_status(m))
     Vm0 = JuMP.value.(Vm); θ0 = JuMP.value.(θ); QgY0 = JuMP.value.(QgY); Vll0 = JuMP.value.(Vll);
-    Ibus_d0 = JuMP.value.(Ibus_d); Ibus_q0 = JuMP.value.(Ibus_q);
+    global Ibus_d0 = JuMP.value.(Ibus_d); global Ibus_q0 = JuMP.value.(Ibus_q);
     print_VU(Vm0,θ0,Vll0)
     println("TOTAL TIME:")
 

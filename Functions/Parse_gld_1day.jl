@@ -97,9 +97,9 @@ end
 ### FUNCTION TO PARSE ALL DATA FROM GRIDLABD
 function parse_gld()
 
-    data_file = open(string("../data/",case_name,"/data.xml"))
+    data_file = open(string("data/",case_name,"/data.xml"))
     data = readlines(data_file)
-    z_file = open(string("../data/",case_name,"/z_dump.xml"))
+    z_file = open(string("data/",case_name,"/z_dump.xml"))
     z_dump = readlines(z_file)
 
     ## PARSE BUS DATA

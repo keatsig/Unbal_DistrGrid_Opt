@@ -37,7 +37,7 @@ function TPOPF(case_name1,obj_op1)
     global crit_node = "all"
     global PV_rat = 0.035;
     global Q_pen = 0*1e-5; global ΔV_pen = 0*1e-2;
-    global tap_en = 0; # Enable taps as variables only for ivr formulation
+    global tap_en = 1; # Enable taps as variables only for ivr formulation
 
     ## Parse system data
     parse_gld(); global M = 1e3
