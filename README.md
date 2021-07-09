@@ -1,5 +1,5 @@
 # ThreePhasePowerModels
-Solve optimal power flow for unbalanced three-phase distribution systems with objective to minimize voltage unbalance
+Solve optimal power flow for unbalanced three-phase distribution systems 
 
 ## Nonlinear three-phase OPF formulations:
 1. `TPOPF_pol()`: Conventional OPF in polar coordinates (bus injection) 
