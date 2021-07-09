@@ -7,11 +7,11 @@ Solve optimal power flow for unbalanced three-phase distribution systems
 3. `TPOPF_ivr()`: Conventional OPF in polar coordinates (branch flow) 
 
 ## Linearized three-phase OPF formulations:
-1. `FOT_opf_pol()`: Iterative first-order Taylor (FOT) approximation OPF in polar coordinates 
-2. `FP_opf_pol()`: Iterative fixed-point (FP) OPF in polar coordinates 
-3. `FP_opf_rect()`: Iterative FP-OPF in rectangular coordinates 
-4. `BFS_opf_rect()`: Iterative backward-forward sweep (BFS) OPF in rectangular coordinates 
-4. `D3F_opf_rect()`: LinDist3Flow OPF 
+1. `FOT_opf_pol()`: Iterative first-order Taylor (FOT) approximation OPF in polar coordinates (bus injection)
+2. `FP_opf_pol()`: Iterative fixed-point (FP) OPF in polar coordinates (bus injection)
+3. `FP_opf_rect()`: Iterative FP-OPF in rectangular coordinates (bus injection)
+4. `BFS_opf_rect()`: Iterative backward-forward sweep (BFS) OPF in rectangular coordinates (branch flow)
+4. `D3F_opf_rect()`: LinDist3Flow OPF (branch flow)
 
 ## Three-phase power flow formulations:
 1. `FP_pf()`: Fixed-point method
