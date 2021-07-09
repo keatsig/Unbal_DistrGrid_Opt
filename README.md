@@ -1,10 +1,10 @@
 # ThreePhasePowerModels
 Solve optimal power flow for unbalanced three-phase distribution systems with objective to minimize voltage unbalance
 
-## Three-phase OPF implementations:
-1. `TPOPF_pol()`: Conventional OPF in polar coordinates (bus injection) with nonlinear AC power flow equations 
-2. `TPOPF_rect()`: Conventional OPF in rectangular coordinates (bus injection) with nonlinear AC power flow equations
-3. `TPOPF_ivr()`: Conventional OPF in polar coordinates (branch flow) with nonlinear AC power flow equations
+## Nonlinear three-phase OPF implementations:
+1. `TPOPF_pol()`: Conventional OPF in polar coordinates (bus injection) 
+2. `TPOPF_rect()`: Conventional OPF in rectangular coordinates (bus injection) 
+3. `TPOPF_ivr()`: Conventional OPF in polar coordinates (branch flow) 
 
 ## Linearized three-phase OPF implementations:
 1. `FOT_opf_pol()`: Iterative first-order Taylor (FOT) approximation OPF in polar coordinates 
