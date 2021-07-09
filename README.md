@@ -21,7 +21,7 @@ Solve optimal power flow for unbalanced three-phase distribution systems
 ## Running code:
 To run the code, use the following command:
 ```@example overview
-include("TPOPF_1day.jl"); TPOPF("case_name",obj_op)
+include("main.jl"); TPOPF("case_name",obj_op)
 ``` 
    - *case_name*: subfolder name in data folder to choose test feeder
    - *obj_op*: choose objective function 
