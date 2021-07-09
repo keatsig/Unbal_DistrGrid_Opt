@@ -17,10 +17,10 @@ function TPOPF(case_name1,obj_op1)
     global case_name = case_name1; global obj_op = obj_op1;
     data_file = open(string("data/",case_name,"/data.xml")); data = readlines(data_file)
     z_file = open(string("data/",case_name,"/z_dump.xml")); z_dump = readlines(z_file)
-    house_sch = CSV.read(string("Load_schedule_PS1.csv"),header=false,type=Float64,DataFrame)
+    house_sch = CSV.read(string("data/Load_schedule_PS1.csv"),header=false,type=Float64,DataFrame)
     global house_sch = convert(Matrix,house_sch)/1e3;
     global n_house_row = size(house_sch,1); global n_house_col = size(house_sch,2)
-    PV_sch = CSV.read(string("PV_schedule_PS1.csv"),header=false,type=Float64,DataFrame)
+    PV_sch = CSV.read(string("data/PV_schedule_PS1.csv"),header=false,type=Float64,DataFrame)
     global PV_sch = convert(Matrix,PV_sch)/1e3; global n_PV_col = size(PV_sch,2)
     # global VUF_init = readdlm(string("VUF_",case_name,"_init.csv"), ',')/100
     global QgY_init = readdlm(string("QgY0_",case_name,"_base.csv"), ',');
