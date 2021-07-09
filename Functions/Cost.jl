@@ -64,7 +64,7 @@ function cost_polar(Vll)
         @objective(m, Min, cost_LVUR*M )
 
     # Minimize losses with unbalance constraints
-    elseif obj_op == 7
+    elseif obj_op == 6
 
         ## Calculate losses
         Pij = @NLexpression(m, [i=1:nb_nph], sum(Vm[i]*Vm[j]*(G[i,j]*cos(θ[i]-θ[j])+B[i,j]*sin(θ[i]-θ[j])) for j=1:nb_nph) )
@@ -105,11 +105,11 @@ function cost_polar(Vll)
         # end
 
     ## Minimize Q-injections
-    elseif obj_op == 8
+    elseif obj_op == 7
         @objective(m, Min, sum(QgY[i] for i=1:ngy_inv) )
 
     ## Minimize linearized VUF
-    elseif obj_op == 9
+    elseif obj_op == 8
         @expression(m, VUF_lin[i=1:n_VU], 0 )
         for i=1:n_VU
             j=Int.(idx_bus_3ph1[i*3-2:i*3]); V_vec = [Vm[j];θ[j]];
@@ -184,7 +184,7 @@ function cost_rect(Vll)
         @objective(m, Min, cost_LVUR*M )
 
     # Minimize losses with unbalance constraints
-    elseif obj_op == 7
+    elseif obj_op == 6
 
         ## Calculate losses
         Pij = @expression(m, [i=1:nb_nph], sum(Vd[i]*( G[i,j]*Vd[j]-B[i,j]*Vq[j]) + Vq[i]*(B[i,j]*Vd[j]+G[i,j]*Vq[j]) for j=1:nb_nph) )
@@ -225,11 +225,11 @@ function cost_rect(Vll)
         # end
 
     ## Minimize Q-injections
-    elseif obj_op == 8
+    elseif obj_op == 7
         @objective(m, Min, sum(QgY[i] for i=1:ngy_inv) )
 
     ## Minimize linearized VUF
-    elseif obj_op == 9
+    elseif obj_op == 8
         @expression(m, VUF_lin[i=1:n_VU], 0 )
         for i=1:n_VU
             j=Int.(idx_bus_3ph1[i*3-2:i*3]); V_vec = [Vd[j];Vq[j]];
