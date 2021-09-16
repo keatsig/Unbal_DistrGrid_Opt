@@ -1,4 +1,4 @@
-using JuMP, Ipopt, SparseArrays, LinearAlgebra, NamedArrays, DelimitedFiles, DataFrames, CSV, Statistics, PyPlot
+using JuMP, Ipopt, KNITRO, SparseArrays, LinearAlgebra, NamedArrays, DelimitedFiles, DataFrames, CSV, Statistics, PyPlot
 
 # Include necessary functions
 include("Functions/Ybus.jl");         # Function to calculate Ybus matrix (G,B)
@@ -17,7 +17,7 @@ function TPOPF(case_name1,obj_op1)
 
     ## Load test case
     global case_name = case_name1; global obj_op = obj_op1;
-    global PV_en = 0;   # 0-exclude, 1-include ZIP loads/PV inverters
+    global PV_en = 1;   # 0-exclude, 1-include ZIP loads/PV inverters
     if PV_en == 1
         house_sch = CSV.read(string("data/",case_name,"/House_",case_name,"_profile.csv"),header=false,type=Float64,DataFrame)
         global house_sch = convert(Matrix,house_sch);
@@ -29,7 +29,7 @@ function TPOPF(case_name1,obj_op1)
     # global QgY_init = readdlm("QgY0_R1-12.47-1_freq60_delay60.csv", ',');
 
     ## Other inputs
-    global count_sch = 684;  # Time instant to run OPF
+    global count_sch = 1;  # Time instant to run OPF
     # global crit_node = ["632"]
     # global crit_node = ["l_49"]
     # global crit_node = ["R1-12-47-1_node_359"]
@@ -58,15 +58,15 @@ function TPOPF(case_name1,obj_op1)
     # (Vm0,θ0,QgY0,pf_iter) = D3F_pf(Vm0,θ0,QgY0,50); print("No of DF iterations: ", pf_iter,"\n");
 
     ## Optimal power flow
-    # @time (Vm0,θ0,QgY0,stat) = TPOPF_pol(crit_node,Vm0,θ0,QgY0)
-    # @time (Vm0,θ0,QgY0,stat) = TPOPF_rect(crit_node,Vm0,θ0,QgY0)
-    # @time (Vm0,θ0,QgY0,stat) = TPOPF_ivr(crit_node,Vm0,θ0,QgY0)
-    # @time (Vm0,θ0,QgY0,stat) = FOT_opf_pol(crit_node,Vm0,θ0,QgY0,0)
-    # @time (Vm0,θ0,QgY0,stat) = FP_opf_rect(crit_node,Vm0,θ0,QgY0,0)
-    @time (Vm0,θ0,QgY0,stat) = BFS_opf_rect1(crit_node,Vm0,θ0,QgY0,0)
-    # @time (Vm0,θ0,QgY0,stat) = D3F_opf_rect(crit_node,Vm0,θ0,QgY0,0)
-    # @time (Vm0,θ0,QgY0,stat) = TPOPF_rect(crit_node,Vm0,θ0,QgY0)
-    # @time (Vm0,θ0,QgY0,stat) = FP_opf_pol(crit_node,Vm0,θ0,QgY0,0)
+    # (Vm0,θ0,QgY0,stat) = FOT_opf_pol(crit_node,Vm0,θ0,QgY0,0)
+    # (Vm0,θ0,QgY0,stat) = FP_opf_rect(crit_node,Vm0,θ0,QgY0,0)
+    # (Vm0,θ0,QgY0,stat) = BFS_opf_rect(crit_node,Vm0,θ0,QgY0,0)
+
+    (Vm0,θ0,QgY0,stat) = TPOPF_pol(crit_node,Vm0,θ0,QgY0)
+    # (Vm0,θ0,QgY0,stat) = TPOPF_rect(crit_node,Vm0,θ0,QgY0)
+    # (Vm0,θ0,QgY0,stat) = TPOPF_ivr(crit_node,Vm0,θ0,QgY0)
+   
+    # (Vm0,θ0,QgY0,stat) = D3F_opf_rect(crit_node,Vm0,θ0,QgY0,0)
     # (Vm0,θ0,QgY0,stat) = TPOPF_act_constr(crit_node,Vm0,θ0,QgY0)
 
     if stat == "DID NOT CONVERGE"
@@ -89,7 +89,7 @@ function TPOPF(case_name1,obj_op1)
     # print("The network losses are ", sum(P_inj),"\n");
     # print("The total reactive power injection is ", sum(QgY0),"\n");
     print("------------------------------------------------------------\n")
-    @show soln_VθPQ
+    # @show soln_VθPQ
     print("------------------------------------------------------------\n")
     x = length(idx_bus_3ph)
     println("Total VUF   = ",round(sum(soln_VUF[:,1]),RoundNearest, digits=3),"%,  Average VUF   = ",round(sum(soln_VUF[:,1])/x,RoundNearest, digits=3),"%, Maximum VUF   = ",findmax(soln_VUF[:,1])[1],"%")

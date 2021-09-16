@@ -2,7 +2,7 @@
 function TPOPF_pol(crit_node,Vm0,θ0,QgY0)
 
     ## Initialize model
-    start_point(1); Vm0 = s0[1:nb_nph]; θ0 = s0[1+nb_nph:2*nb_nph];
+    # start_point(1); Vm0 = s0[1:nb_nph]; θ0 = s0[1+nb_nph:2*nb_nph];
     # @time (Vm0,θ0,QgY0,stat) = FOT_opf_pol(crit_node,Vm0,θ0,QgY0,0)
     # (Vm0,θ0,QgY0,pf_iter) = FP_pf(Vm0,θ0,QgY0,50);
     # @time (Vm0,θ0,QgY0,stat) = FP_opf_rect(crit_node,Vm0,θ0,QgY0,0)
@@ -50,7 +50,8 @@ function TPOPF_pol(crit_node,Vm0,θ0,QgY0)
     end
 
     ## Define variables
-    global m = Model(optimizer_with_attributes(Ipopt.Optimizer,"warm_start_init_point"=>"yes","print_level"=>5, "tol"=>1e-7));
+    # global m = Model(optimizer_with_attributes(Ipopt.Optimizer,"warm_start_init_point"=>"yes","print_level"=>0, "tol"=>1e-7));
+    global m = Model(optimizer_with_attributes(KNITRO.Optimizer,"honorbnds" => 1, "outlev" => 0, "presolve" => 0, "strat_warm_start" => 1, "algorithm" => 0));
     global Vm = @variable(m, [i=1:nb_nph], start = Vm0[i] )
     global θ = @variable(m,  [i=1:nb_nph], start = θ0[i] )
     global Vll = @variable(m, [i=1:nb_nph], start = Vll0[i] )
@@ -186,7 +187,7 @@ function TPOPF_pol(crit_node,Vm0,θ0,QgY0)
         @NLconstraint(m, sum(Cbg[i,k]*QgY[k] for k=1:ngy_inv) - sum(CblY[i,kk]*YloadQ[kk] for kk=1:nly_nph) - sum(CblD[i,kkk]*Q_d2y[kkk] for kkk=1:nldy_nph) == Qij[i] )
     end
 
-    ## DEfine cost
+    ## Define cost
     cost_polar(Vll);
 
     ## Solve and print solution
@@ -194,7 +195,6 @@ function TPOPF_pol(crit_node,Vm0,θ0,QgY0)
     stat = string(termination_status(m))
     Vm0 = JuMP.value.(Vm); θ0 = JuMP.value.(θ); QgY0 = JuMP.value.(QgY); Vll0 = JuMP.value.(Vll);
     print_VU(Vm0,θ0,Vll0)
-    println("TOTAL TIME:")
     return Vm0,θ0,QgY0,stat
 end
 
@@ -389,7 +389,7 @@ function FOT_opf_pol(crit_node,Vm0,θ0,QgY0,dnc)
     ZIP_load()
 
     ## Start iterative linearized OPF
-    max_iter = 20; opf_iter = 0; opf_err = 1; stat = "LOCALLY_SOLVED";
+    max_iter = 1; opf_iter = 0; opf_err = 1; stat = "LOCALLY_SOLVED";
     YloadP = zeros(nly_nph); YloadQ = zeros(nly_nph);
     DloadP = zeros(nld_nph); DloadQ = zeros(nld_nph);
     I_ll = zeros(nld_nph)*(0+im*0); P_d2y = zeros(nldy_nph); Q_d2y = zeros(nldy_nph);
@@ -553,7 +553,7 @@ function FOT_opf_pol(crit_node,Vm0,θ0,QgY0,dnc)
     ## Run power flow to convergence if OPF did not converge
     if opf_iter == max_iter
         println("\n****************OPF DID NOT CONVERGE!!*******************\n")
-        (Vm0,θ0,QgY0,pf_iter) = FP_pf(Vm0,θ0,QgY0,50); print("No of PF iterations: ", pf_iter,"\n");
+        # (Vm0,θ0,QgY0,pf_iter) = FP_pf(Vm0,θ0,QgY0,50); print("No of PF iterations: ", pf_iter,"\n");
         if dnc == 0
             stat = "DID NOT CONVERGE";
         end
@@ -568,7 +568,6 @@ function FOT_opf_pol(crit_node,Vm0,θ0,QgY0,dnc)
     end
     print_VU(Vm0,θ0,Vll0);
     global P_loss = sum(P_inj)*baseMVA*1e3
-    println("TOTAL TIME:")
     return Vm0,θ0,QgY0,stat
 end
 
