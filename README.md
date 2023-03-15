@@ -1,4 +1,4 @@
-# ThreePhasePowerModels
+# Unbal_DistrGrid_Opt
 Solve optimal power flow for unbalanced three-phase distribution systems 
 
 ## Nonlinear three-phase OPF formulations:
